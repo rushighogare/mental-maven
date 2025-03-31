@@ -322,7 +322,7 @@ import requests
 app = Flask(__name__)
 
 # Hugging Face API Key (replace with your actual key)
-HUGGINGFACE_API_KEY = "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"
+HUGGINGFACE_API_KEY = ""
 
 # Model name (use a free model)
 MODEL_NAME = "HuggingFaceH4/zephyr-7b-beta"
