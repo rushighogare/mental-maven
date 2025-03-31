@@ -1,0 +1,95 @@
+
+
+{% extends "base.html" %}
+
+{% block title %}Home - Video Interaction{% endblock %}
+
+{% block content %}
+<h1>Video Interaction - Voice Response</h1>
+
+<!-- Display the question dynamically -->
+<h2 id="question-text">Question will appear here...</h2>
+
+<!-- Video Player -->
+<video id="video-player" controls>
+    <source id="video-source" src="" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<!-- Buttons -->
+<button id="record-btn" style="display: none;">Record Your Response</button>
+
+<!-- Display Response -->
+<div id="response-container" class="response-box" style="display: none;">
+    <strong>Your Response:</strong>
+    <p id="response-text"></p>
+</div>
+
+<script>
+    // List of videos and corresponding questions
+    const videos = [
+        { src: "/static/video/video1.mp4", question: "What is your name?" },
+        { src: "/static/video/video2.mp4", question: "What is your favorite color?" },
+        { src: "/static/video/video3.mp4", question: "Where do you live?" }
+    ];
+
+    let currentVideoIndex = 0;
+
+    // DOM Elements
+    const videoPlayer = document.getElementById("video-player");
+    const videoSource = document.getElementById("video-source");
+    const recordBtn = document.getElementById("record-btn");
+    const responseContainer = document.getElementById("response-container");
+    const responseText = document.getElementById("response-text");
+    const questionText = document.getElementById("question-text");
+
+    // Function to load and play the next video
+    function loadNextVideo() {
+        if (currentVideoIndex < videos.length) {
+            const video = videos[currentVideoIndex];
+            videoSource.src = video.src;
+            videoPlayer.load();
+            questionText.innerText = video.question;
+            recordBtn.style.display = "none";
+            responseContainer.style.display = "none";
+        } else {
+            questionText.innerText = "Thank you for completing the session!";
+            videoPlayer.style.display = "none";
+            recordBtn.style.display = "none";
+        }
+    }
+
+    // Play next video when current video ends
+    videoPlayer.addEventListener("ended", function () {
+        recordBtn.style.display = "block";
+    });
+
+    // Handle recording
+    recordBtn.addEventListener("click", async function () {
+        responseText.innerText = "Listening... Please speak into your microphone.";
+        responseContainer.style.display = "block";
+
+        try {
+            const response = await fetch("/record-response", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: videos[currentVideoIndex].question })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                responseText.innerText = data.text;
+                currentVideoIndex++; // Move to the next video
+                setTimeout(loadNextVideo, 2000); // Load next video after 2 sec delay
+            } else {
+                responseText.innerText = "Error: " + data.error;
+            }
+        } catch (error) {
+            responseText.innerText = "Error connecting to the server. Please try again.";
+        }
+    });
+
+    // Load first video on page load
+    loadNextVideo();
+</script>
+{% endblock %}
